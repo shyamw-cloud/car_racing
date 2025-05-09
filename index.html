@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kids Car Racing Adventure</title>
+    <style>
+        body { 
+            background-color: #87CEEB; 
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        h1 { 
+            color: #333;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        #game-container {
+            max-width: 800px;
+            height: 600px;
+            margin: 0 auto;
+            border: 2px solid #333;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            background-color: #000;
+            position: relative;
+        }
+        .instructions {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px auto;
+            max-width: 600px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #87CEEB;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .loading-bar-container {
+            width: 80%;
+            height: 30px;
+            background-color: #ddd;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        .loading-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #4CAF50;
+            transition: width 0.3s;
+        }
+        .loading-text {
+            margin-top: 10px;
+            font-size: 18px;
+            color: #333;
+        }
+        .game-logo {
+            max-width: 300px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 768px) {
+            #game-container {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 4/3;
+            }
+            .instructions {
+                width: 90%;
+            }
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+    </style>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MEASUREMENT_ID"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-MEASUREMENT_ID'); // Replace with your actual Google Analytics ID
+    </script>
+</head>
+<body>
+    <h1>Kids Car Racing Adventure</h1>
+    <div class="instructions">
+        <h2>How to Play:</h2>
+        <p>Use LEFT and RIGHT arrow keys to control your Lamborghini</p>
+        <p>On mobile devices, use the touch buttons at the bottom of the screen</p>
+        <p>Avoid other cars to score points!</p>
+        <p>You have 4 lives - be careful!</p>
+        <button class="button" id="startGame">Start Game</button>
+    </div>
+    <div id="game-container">
+        <div class="loading-overlay" id="loadingOverlay">
+            <img src="assets/images/lamborghini.png" alt="Game Logo" class="game-logo" id="gameLogo">
+            <div class="loading-bar-container">
+                <div class="loading-bar" id="loadingBar"></div>
+            </div>
+            <div class="loading-text" id="loadingText">Loading... 0%</div>
+        </div>
+        <canvas id="pygbag-canvas" oncontextmenu="event.preventDefault()" tabindex="1"></canvas>
+    </div>
+    <div class="footer">
+        <p>© 2023 Kids Car Racing Adventure | <a href="#" id="privacyPolicy">Privacy Policy</a></p>
+        <p>Current Players: <span id="playerCount">0</span> | Total Plays: <span id="totalPlays">0</span></p>
+    </div>
+
+    <script>
+        // Simulate loading progress
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadingBar = document.getElementById('loadingBar');
+            const loadingText = document.getElementById('loadingText');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const startButton = document.getElementById('startGame');
+            const playerCount = document.getElementById('playerCount');
+            const totalPlays = document.getElementById('totalPlays');
+            
+            let progress = 0;
+            const loadingInterval = setInterval(() => {
+                progress += 1;
+                loadingBar.style.width = progress + '%';
+                loadingText.textContent = `Loading... ${progress}%`;
+                
+                if (progress >= 100) {
+                    clearInterval(loadingInterval);
+                    loadingText.textContent = 'Ready to Play!';
+                    startButton.disabled = false;
+                }
+            }, 50);
+            
+            // Start game button
+            startButton.addEventListener('click', function() {
+                loadingOverlay.style.display = 'none';
+                
+                // Track game start in analytics
+                if (typeof gtag === 'function') {
+                    gtag('event', 'game_start', {
+                        'event_category': 'Game',
+                        'event_label': 'Game Started'
+                    });
+                }
+                
+                // Update player count
+                let players = parseInt(playerCount.textContent) + 1;
+                playerCount.textContent = players;
+                
+                // Update total plays
+                let plays = parseInt(totalPlays.textContent) + 1;
+                totalPlays.textContent = plays;
+                
+                // Here we would normally initialize the Pygbag/game
+                // For now, we'll just show a message
+                const canvas = document.getElementById('pygbag-canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = 800;
+                canvas.height = 600;
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                ctx.font = '24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Game would start here when deployed', canvas.width/2, canvas.height/2);
+            });
+        });
+    </script>
+</body>
+</html>
