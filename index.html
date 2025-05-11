@@ -10,34 +10,32 @@
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 0;
-            padding: 20px;
+            padding: 0;
             color: #333;
+            overflow: hidden;
         }
         h1 { 
             color: #333;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            margin: 10px 0;
         }
         #game-container {
-            max-width: 800px;
-            height: 600px;
+            width: 100%;
+            height: 100vh;
             margin: 0 auto;
-            border: 2px solid #333;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            background-color: #000;
             position: relative;
+            display: none;
         }
         .instructions {
             background-color: #fff;
             padding: 15px;
             border-radius: 10px;
-            margin: 20px auto;
+            margin: 10px auto;
             max-width: 600px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .loading-overlay {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
@@ -69,22 +67,25 @@
             color: #333;
         }
         .game-logo {
-            max-width: 300px;
+            max-width: 200px;
             margin-bottom: 20px;
         }
         @media (max-width: 768px) {
-            #game-container {
-                width: 100%;
-                height: auto;
-                aspect-ratio: 4/3;
-            }
             .instructions {
                 width: 90%;
+                padding: 10px;
+            }
+            h1 {
+                font-size: 24px;
             }
         }
         .footer {
-            margin-top: 20px;
-            font-size: 14px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 5px 0;
+            font-size: 12px;
             color: #555;
         }
         .button {
@@ -101,6 +102,44 @@
         .button:hover {
             background-color: #45a049;
         }
+        #canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            margin: 0 auto;
+        }
+        .touch-controls {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-sizing: border-box;
+            pointer-events: none;
+        }
+        .control-button {
+            width: 80px;
+            height: 80px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
+        }
+        .arrow {
+            width: 0;
+            height: 0;
+            border-top: 15px solid transparent;
+            border-bottom: 15px solid transparent;
+        }
+        .arrow-left {
+            border-right: 25px solid #333;
+        }
+        .arrow-right {
+            border-left: 25px solid #333;
+        }
     </style>
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-MEASUREMENT_ID"></script>
@@ -112,40 +151,68 @@
     </script>
 </head>
 <body>
-    <h1>Kids Car Racing Adventure</h1>
-    <div class="instructions">
-        <h2>How to Play:</h2>
-        <p>Use LEFT and RIGHT arrow keys to control your Lamborghini</p>
-        <p>On mobile devices, use the touch buttons at the bottom of the screen</p>
-        <p>Avoid other cars to score points!</p>
-        <p>You have 4 lives - be careful!</p>
-        <button class="button" id="startGame">Start Game</button>
-    </div>
-    <div id="game-container">
-        <div class="loading-overlay" id="loadingOverlay">
-            <img src="assets/images/lamborghini.png" alt="Game Logo" class="game-logo" id="gameLogo">
-            <div class="loading-bar-container">
-                <div class="loading-bar" id="loadingBar"></div>
-            </div>
-            <div class="loading-text" id="loadingText">Loading... 0%</div>
+    <div id="start-screen">
+        <h1>Kids Car Racing Adventure</h1>
+        <div class="instructions">
+            <h2>How to Play:</h2>
+            <p>Use LEFT and RIGHT arrow keys to control your Lamborghini</p>
+            <p>On mobile devices, use the touch buttons at the bottom of the screen</p>
+            <p>Avoid other cars to score points!</p>
+            <p>You have 4 lives - be careful!</p>
+            <button class="button" id="startGame">Start Game</button>
         </div>
-        <canvas id="pygbag-canvas" oncontextmenu="event.preventDefault()" tabindex="1"></canvas>
     </div>
+
+    <div id="game-container">
+        <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="1"></canvas>
+        <div class="touch-controls">
+            <div class="control-button" id="leftButton">
+                <div class="arrow arrow-left"></div>
+            </div>
+            <div class="control-button" id="rightButton">
+                <div class="arrow arrow-right"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <img src="assets/images/lamborghini.png" alt="Game Logo" class="game-logo" id="gameLogo">
+        <div class="loading-bar-container">
+            <div class="loading-bar" id="loadingBar"></div>
+        </div>
+        <div class="loading-text" id="loadingText">Loading... 0%</div>
+    </div>
+
     <div class="footer">
-        <p>© 2023 Kids Car Racing Adventure | <a href="#" id="privacyPolicy">Privacy Policy</a></p>
+        <p>© 2023 Kids Car Racing Adventure | <a href="privacy_policy.html" id="privacyPolicy">Privacy Policy</a></p>
         <p>Current Players: <span id="playerCount">0</span> | Total Plays: <span id="totalPlays">0</span></p>
     </div>
 
+    <script type="text/javascript">
+        // Set up the Module for Pygbag
+        var Module = {
+            canvas: document.getElementById('canvas')
+        };
+    </script>
+
     <script>
-        // Simulate loading progress
         document.addEventListener('DOMContentLoaded', function() {
             const loadingBar = document.getElementById('loadingBar');
             const loadingText = document.getElementById('loadingText');
             const loadingOverlay = document.getElementById('loadingOverlay');
             const startButton = document.getElementById('startGame');
+            const startScreen = document.getElementById('start-screen');
+            const gameContainer = document.getElementById('game-container');
             const playerCount = document.getElementById('playerCount');
             const totalPlays = document.getElementById('totalPlays');
+            const leftButton = document.getElementById('leftButton');
+            const rightButton = document.getElementById('rightButton');
             
+            // Touch controls state
+            let leftPressed = false;
+            let rightPressed = false;
+            
+            // Simulate initial loading
             let progress = 0;
             const loadingInterval = setInterval(() => {
                 progress += 1;
@@ -155,13 +222,15 @@
                 if (progress >= 100) {
                     clearInterval(loadingInterval);
                     loadingText.textContent = 'Ready to Play!';
-                    startButton.disabled = false;
+                    loadingOverlay.style.display = 'none';
+                    startScreen.style.display = 'block';
                 }
-            }, 50);
+            }, 30);
             
             // Start game button
             startButton.addEventListener('click', function() {
-                loadingOverlay.style.display = 'none';
+                startScreen.style.display = 'none';
+                gameContainer.style.display = 'block';
                 
                 // Track game start in analytics
                 if (typeof gtag === 'function') {
@@ -179,18 +248,103 @@
                 let plays = parseInt(totalPlays.textContent) + 1;
                 totalPlays.textContent = plays;
                 
-                // Here we would normally initialize the Pygbag/game
-                // For now, we'll just show a message
-                const canvas = document.getElementById('pygbag-canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = 800;
-                canvas.height = 600;
-                ctx.fillStyle = 'black';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = 'white';
-                ctx.font = '24px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('Game would start here when deployed', canvas.width/2, canvas.height/2);
+                // Load the actual game script
+                const script = document.createElement('script');
+                script.src = 'main.js';
+                document.body.appendChild(script);
+            });
+            
+            // Touch controls for mobile
+            leftButton.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                leftPressed = true;
+                // Send key event to the game
+                if (window.pygbag && window.pygbag.press) {
+                    window.pygbag.press(37); // Left arrow key code
+                }
+            });
+            
+            leftButton.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                leftPressed = false;
+                // Send key release event to the game
+                if (window.pygbag && window.pygbag.release) {
+                    window.pygbag.release(37); // Left arrow key code
+                }
+            });
+            
+            rightButton.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                rightPressed = true;
+                // Send key event to the game
+                if (window.pygbag && window.pygbag.press) {
+                    window.pygbag.press(39); // Right arrow key code
+                }
+            });
+            
+            rightButton.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                rightPressed = false;
+                // Send key release event to the game
+                if (window.pygbag && window.pygbag.release) {
+                    window.pygbag.release(39); // Right arrow key code
+                }
+            });
+            
+            // Also handle mouse events for desktop testing
+            leftButton.addEventListener('mousedown', function() {
+                leftPressed = true;
+                if (window.pygbag && window.pygbag.press) {
+                    window.pygbag.press(37);
+                }
+            });
+            
+            leftButton.addEventListener('mouseup', function() {
+                leftPressed = false;
+                if (window.pygbag && window.pygbag.release) {
+                    window.pygbag.release(37);
+                }
+            });
+            
+            rightButton.addEventListener('mousedown', function() {
+                rightPressed = true;
+                if (window.pygbag && window.pygbag.press) {
+                    window.pygbag.press(39);
+                }
+            });
+            
+            rightButton.addEventListener('mouseup', function() {
+                rightPressed = false;
+                if (window.pygbag && window.pygbag.release) {
+                    window.pygbag.release(39);
+                }
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                // Adjust canvas size if needed
+                const canvas = document.getElementById('canvas');
+                if (canvas) {
+                    // Maintain aspect ratio
+                    const container = document.getElementById('game-container');
+                    const containerWidth = container.clientWidth;
+                    const containerHeight = container.clientHeight;
+                    
+                    const gameRatio = 800 / 600;
+                    const containerRatio = containerWidth / containerHeight;
+                    
+                    if (containerRatio > gameRatio) {
+                        // Container is wider than needed
+                        const newWidth = containerHeight * gameRatio;
+                        canvas.style.width = newWidth + 'px';
+                        canvas.style.height = containerHeight + 'px';
+                    } else {
+                        // Container is taller than needed
+                        const newHeight = containerWidth / gameRatio;
+                        canvas.style.width = containerWidth + 'px';
+                        canvas.style.height = newHeight + 'px';
+                    }
+                }
             });
         });
     </script>
